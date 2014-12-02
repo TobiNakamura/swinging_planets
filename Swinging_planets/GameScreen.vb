@@ -5,6 +5,7 @@
     Public thisScreen As screenState = screenState.unloaded
     Dim currentKeys As New List(Of Keys)
     Dim lblFpsCounter As Label
+    Dim lblScoreCounter As Label
     Dim lastCall As DateTime
 
     '=======game parameters======='
@@ -13,6 +14,8 @@
     Dim shtFPS As Short = 30
     Dim G As Double = 0.01
     Dim thrusterForce As Double = 0.01
+    Dim shtScoreScale As Short = 5
+    Dim dblTotalScore As Double
 
     '============================================screen controls============================='
     Public Sub load(ByRef parent As Form1)
@@ -35,6 +38,8 @@
 
         lblFpsCounter = New Label()
         lblFpsCounter.Location = New Point(10, 10)
+        lblScoreCounter = New Label
+        lblScoreCounter.Location = New Point(300, 10)
 
         thisScreen = screenState.loaded
     End Sub
@@ -94,6 +99,11 @@
         form.Controls.Add(lblFpsCounter)
         lastCall = DateTime.Now
 
+        lblScoreCounter.Text = Math.Round(dblTotalScore)
+        form.Controls.Add(lblScoreCounter)
+        dblTotalScore += addPoints()
+
+
         Dim myPen As Pen = New Pen(Drawing.Color.Blue, 2)
         Dim currentContext As BufferedGraphicsContext
         Dim myBuffer As BufferedGraphics
@@ -133,7 +143,13 @@
     End Sub
     '===================================================================================================================================='
 
-
+    Private Function addPoints() As Double
+        Dim dblReturn As Double
+        For i = 0 To planets.Length - 1
+            dblReturn += shtScoreScale / (spaceChip.position.distance(planets(i).position) - planets(i).radii)
+        Next
+        Return dblReturn
+    End Function
 
     '=============================celestial objects======================'
     Private Class Celestial
