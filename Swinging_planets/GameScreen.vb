@@ -1,4 +1,6 @@
-﻿Module GameScreen
+﻿Imports System.Drawing.Drawing2D
+
+Module GameScreen
 
     Dim WithEvents clock As Timer
     Dim form As Form1
@@ -7,15 +9,23 @@
     Dim lblFpsCounter As Label
     Dim lblScoreCounter As Label
     Dim lastCall As DateTime
+    Dim dblTotalScore As Double
+    Dim imgCrashIcon As Image
+    Dim count As Integer
+    Dim saveFrames As Persistence
+    Dim blnCrashProcedure As Boolean
+    Dim lblTimer As Label
 
     '=======game parameters======='
-    Dim planets(2) As Celestial
-    Dim spaceChip As Ship
-    Dim shtFPS As Short = 30
+    Dim planets(3) As Celestial
+    Dim WithEvents spaceChip As Ship
+    Dim shtFPS As Short = 33
     Dim G As Double = 0.01
     Dim thrusterForce As Double = 0.01
     Dim shtScoreScale As Short = 5
-    Dim dblTotalScore As Double
+    Dim coefficenceDrag As Double = 0.02
+    Dim playTime As TimeSpan = New TimeSpan(1, 0, 0)
+    
 
     '============================================screen controls============================='
     Public Sub load(ByRef parent As Form1)
@@ -25,21 +35,28 @@
         clock = New Timer()
         clock.Interval = 1000 / shtFPS
 
-        Dim p(2) As PVector
-        p(0) = New PVector(500, 200)
-        p(1) = New PVector(200, 500)
-        p(2) = New PVector(800, 300)
-        For x = 0 To planets.Length - 1
-            planets(x) = New Celestial(p(x), 50)
-        Next
-        spaceChip = New Ship(500, 100)
-        spaceChip.velocity.x = 2
+        planets(0) = New Celestial(New PVector(5100, 500), 50, New Double{0, 0}, 70, New Color() {Color.FromArgb(20, 50, 90, 255), Color.Blue}, Brushes.GreenYellow, 1)
+        planets(1) = New Celestial(New PVector(5500, 700), 50, New Double{0, 0}, 70, New Color() {Color.FromArgb(20, 50, 90, 255), Color.Blue}, Brushes.GreenYellow, 1)
+        planets(2) = New Celestial(New PVector(5000, 300), 50, New Double{0, 0},  70, New Color() {Color.FromArgb(20, 50, 90, 255), Color.Blue}, Brushes.GreenYellow, 1)
+        planets(3) = New Celestial(New PVector(0, 0), 400, 450, New Double{0, 0},  New Color() {Color.FromArgb(20, 50, 90, 255), Color.Blue}, Brushes.GreenYellow, 1)
+        spaceChip = New Ship(5000, 100)
+        spaceChip.velocity.x = 1.5
         spaceChip.velocity.y = 0
 
         lblFpsCounter = New Label()
         lblFpsCounter.Location = New Point(10, 10)
-        lblScoreCounter = New Label
+        lblFpsCounter.Width = 40
+        form.Controls.Add(lblFpsCounter)
+        lblScoreCounter = New Label()
         lblScoreCounter.Location = New Point(300, 10)
+        form.Controls.Add(lblScoreCounter)
+        lblTimer = New Label()
+        lblTimer.Location = New Point(600, 10)
+        form.Controls.Add(lblTimer)
+
+        imgCrashIcon = Image.FromFile("crashIcon.png")
+
+        saveFrames = New Persistence()
 
         thisScreen = screenState.loaded
     End Sub
@@ -49,8 +66,12 @@
         thisScreen = screenState.running
     End Sub
 
+
     Public Sub unload()
-        clock.Dispose()
+        form.Controls.Remove(lblScoreCounter)
+        form.Controls.Remove(lblFpsCounter)
+        form.Controls.Remove(lblTimer)
+        form.Update()
         thisScreen = screenState.unloaded
     End Sub
     '====================================end screen controls==========================================================='
@@ -61,6 +82,7 @@
             clock.Stop()
         ElseIf e.KeyValue = Keys.Enter Then
             clock.Start()
+
         ElseIf e.KeyValue = Keys.Up Then
             KeyStates.up = True
         ElseIf e.KeyValue = Keys.Left Then
@@ -87,24 +109,18 @@
         End If
         currentKeys.Remove(e.KeyCode)
     End Sub
+
+    Public Sub mouseWheel(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs)
+        zoomState.mouseWheelMove(e.Delta)
+    End Sub
     '===============================================end input control============================'
 
 
     '==============================================instruction cycle==============================================='
     Private Sub clock_tick(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles clock.Tick
-        Dim dblDeltaT = 1000 / (DateTime.Now - lastCall).TotalMilliseconds
-        dblDeltaT = Math.Round(dblDeltaT)
-        lblFpsCounter.Text = dblDeltaT.ToString + " fps"
-        lblFpsCounter.Width = 40
-        form.Controls.Add(lblFpsCounter)
-        lastCall = DateTime.Now
 
-        lblScoreCounter.Text = Math.Round(dblTotalScore)
-        form.Controls.Add(lblScoreCounter)
-        dblTotalScore += addPoints()
+        fpsCounter()
 
-
-        Dim myPen As Pen = New Pen(Drawing.Color.Blue, 2)
         Dim currentContext As BufferedGraphicsContext
         Dim myBuffer As BufferedGraphics
         ' Gets a reference to the current BufferedGraphicsContext.
@@ -113,55 +129,88 @@
         ' dimensions the same size as the drawing surface of Form1.
         myBuffer = currentContext.Allocate(form.CreateGraphics, form.DisplayRectangle)
 
-        myBuffer.Graphics.Clear(Color.White) 'clears background with white
+        myBuffer.Graphics.ScaleTransform(zoomState.zoom, zoomState.zoom)
+        myBuffer.Graphics.TranslateTransform((form.DisplayRectangle.Width / 2) * (1 / zoomState.zoom) - spaceChip.position.x,
+                                             (form.DisplayRectangle.Height / 2) * (1 / zoomState.zoom) - spaceChip.position.y)
+        'offsets the screen to center spacecraf(pan camera), accounting for motion of space craft and 
+        'zooming(the scalingtransform() pivots at top left corner)
 
-        spaceChip.Move(planets) 'move the space ship
+        drawGraphics(myBuffer.Graphics)
 
-        myBuffer.Graphics.TranslateTransform((form.DisplayRectangle.Width / 2) - spaceChip.position.x,
-                                             (form.DisplayRectangle.Height / 2) - spaceChip.position.y) 'offsets the screen to center spacecraf(pan camera)
-
-        Dim bounds As Rectangle = New Rectangle(spaceChip.position.x - 5, spaceChip.position.y - 5, 10, 10)
-        myBuffer.Graphics.DrawEllipse(myPen, bounds) 'draw the space ship
-
-        myBuffer.Graphics.DrawLines(myPen, spaceChip.tracer(planets)) 'draws the future path of the space ship
-
-
-        For i = 0 To planets.Length - 1 'draw planets
-            myBuffer.Graphics.DrawEllipse(myPen, CInt(planets(i).position.x - (planets(i).radii)),
-                                          CInt(planets(i).position.y - (planets(i).radii)),
-                                          CSng(planets(i).radii * 2), CSng(planets(i).radii * 2))
-        Next
-
-
-
+        If blnCrashProcedure = False Then
+            spaceChip.Move(planets) 'move the space ship
+            addPoints()
+        ElseIf blnCrashProcedure = True Then
+            spaceChip.explode(myBuffer.Graphics)
+        End If
 
 
 
         ' Renders the contents of the buffer to the specified drawing surface.
         myBuffer.Render(form.CreateGraphics)
         myBuffer.Dispose()
+
+
+        If count = 10 Then
+            Dim img As New Bitmap(form.DisplayRectangle.Width, form.DisplayRectangle.Height) 'memory leak danger, dont save too many(800ish seems to be limit)
+            Dim aFrame As Graphics = Graphics.FromImage(img)
+            aFrame.TranslateTransform((form.DisplayRectangle.Width / 2) * (1 / zoomState.zoom) - spaceChip.position.x,
+                                             (form.DisplayRectangle.Height / 2) * (1 / zoomState.zoom) - spaceChip.position.y)
+            drawGraphics(aFrame)
+            saveFrames.addFrame(img, dblTotalScore)
+            aFrame.Dispose()
+        End If
+        count += 1
+
+        countDown()
+
     End Sub
     '===================================================================================================================================='
 
-    Private Function addPoints() As Double
-        Dim dblReturn As Double
-        For i = 0 To planets.Length - 1
-            dblReturn += shtScoreScale / (spaceChip.position.distance(planets(i).position) - planets(i).radii)
+    Private Sub drawGraphics(ByRef buffer As Graphics)
+        buffer.SmoothingMode = Drawing2D.SmoothingMode.HighQuality
+        buffer.PixelOffsetMode = Drawing2D.PixelOffsetMode.HighQuality 'pixel offset doesnt seem to be doing much
+        buffer.Clear(Color.FromArgb(255, 93, 93, 93)) 'clears background
+        For i = 0 To planets.Length - 1 'draw planets
+            planets(i).Draw(buffer)
         Next
-        Return dblReturn
-    End Function
+        If blnCrashProcedure = False Then
+            spaceChip.Draw(buffer, planets)
+        End If
+    End Sub
 
-    '=============================celestial objects======================'
-    Private Class Celestial
-        Public position As PVector
-        Public radii As Double
+    '=======================handles player crashing into celestia==============================
+    Private Sub playerCrashed() Handles spaceChip.crashed
+        Form1.loadAndDisplayDeathScreen(saveFrames)
+    End Sub
 
-        Public Sub New(ByVal position As PVector, ByVal radii As Double)
-            Me.position = position
-            Me.radii = radii
-        End Sub
+    '==============================keeps track of total points================='
+    Private Sub addPoints()
+        For i = 0 To planets.Length - 1
+            dblTotalScore += shtScoreScale / (spaceChip.position.distance(planets(i).position) - planets(i).radii)
+        Next
+        lblScoreCounter.Text = Math.Round(dblTotalScore)
+    End Sub
 
-    End Class
+    Dim startTime As Date = DateTime.Now
+    Dim elapsedTime As TimeSpan
+    Private Sub countDown()
+        elapsedTime = DateTime.Now - startTime
+        If elapsedTime > playTime Then
+            clock.Stop()
+            playerCrashed()
+        End If
+        lblTimer.Text = (playTime - elapsedTime).ToString
+    End Sub
+
+    '=============================fps counter==========================='
+    Private Sub fpsCounter()
+        Dim dblDeltaT = 1000 / (DateTime.Now - lastCall).TotalMilliseconds
+        dblDeltaT = Math.Round(dblDeltaT)
+        lblFpsCounter.Text = dblDeltaT.ToString + " fps"
+        lastCall = DateTime.Now
+    End Sub
+
 
 
 
@@ -169,7 +218,7 @@
     Private Class Ship
 
         Public position, velocity As PVector
-        Dim count As Integer
+        Public Event crashed()
 
         Public Sub New(ByVal x As Double, ByVal y As Double)
             position = New PVector(0, 0)
@@ -178,40 +227,148 @@
             velocity = New PVector(0, 0)
         End Sub
 
-        Public Function tracer(ByVal planets() As Celestial) As Point()
+        Private Sub futurePath(ByVal planets() As Celestial, ByRef buffer As Graphics)
+            Dim nominalPen As New Pen(Brushes.Blue)
+            Dim warningPen As New Pen(Brushes.Red)
             Dim shtLength As Short = 300 'length of leading line
-            Dim rtnPoints(shtLength) As Point
+            Dim rtnPoints() As Point 'initiate with 2 indicies beacause drawlines() doesnt like less than 2
+            Dim blnInAtmosphere As Boolean = False
             Dim p As PVector = position.getThis 'copy the spaceship properties
             Dim v As PVector = velocity.getThis
+            Dim lineIndex As Short = 0
             For x = 0 To shtLength
-                v.add(Grav(planets, p)) 'add to velocity
+                v.add(Grav(planets, p)) 'add gravity to velocity
+                'supports multiplanet atmospheric entry
+                Dim closestPlanet As Celestial = findClosestPlanet(planets, p)
+                '-----------------------------------------------
+                Dim drag As PVector = New PVector(0, 0)
+                If p.distance(closestPlanet.position) < (closestPlanet.atmosphereRadii) Then 'in the atmosphere
+                    drag = v.getThis
+                    drag.multiply(-1) 'drag is opposite to prograde
+                    drag.setMagnitude(dragMagnitude(closestPlanet, p.getThis, v.getThis)) 'magnitude of force
+                    If blnInAtmosphere = False Then 'entry into atmosphere
+                        printLines(nominalPen, rtnPoints, buffer) 'the null ref error will never come up beacause 
+                        lineIndex = 0
+                        ReDim rtnPoints(lineIndex) 'reset array
+                        blnInAtmosphere = True
+                    ElseIf p.distance(closestPlanet.position) < closestPlanet.radii Then 'crashed onto surface
+                        buffer.DrawImage(imgCrashIcon, New Point(p.x - (imgCrashIcon.Width / 2), p.y - (imgCrashIcon.Height / 2)))
+                        x = shtLength 'end the loop
+                    End If
+                ElseIf blnInAtmosphere = True Then 'exsiting atmosphere
+                    printLines(warningPen, rtnPoints, buffer)
+                    lineIndex = 0
+                    ReDim rtnPoints(lineIndex) 'reset array
+                    blnInAtmosphere = False
+                End If
+                v.add(drag)
                 p.add(v) 'move the spacecraft
-                rtnPoints(x) = New Point(p.x, p.y)
+                ReDim Preserve rtnPoints(lineIndex) 'extend the array to add new point
+                rtnPoints(lineIndex) = New Point(p.x, p.y)
+                lineIndex += 1
             Next
-            Return rtnPoints
+
+            If blnInAtmosphere = True Then 'final segment
+                printLines(Pens.Red, rtnPoints, buffer)
+            ElseIf blnInAtmosphere = False Then
+                printLines(Pens.Blue, rtnPoints, buffer)
+            End If
+
+        End Sub
+
+        Private Sub printLines(ByVal lineColor As Pen, ByVal linePoints() As Point, ByRef buffer As Graphics)
+            Try
+                buffer.DrawLines(lineColor, linePoints) 'draw atmosphere line
+            Catch e As ArgumentException
+                'in the event that there are not enough points
+            End Try
+        End Sub
+
+        '=======================finds and returns the closes planet ========================================  
+        Private Function findClosestPlanet(ByVal planets() As Celestial, ByVal currentPosition As PVector) As Celestial
+            Dim closestPlanet As Celestial = planets(0)
+            For i = 1 To planets.Length - 1
+                If currentPosition.distance(closestPlanet.position) > currentPosition.distance(planets(i).position) Then
+                    closestPlanet = planets(i)
+                End If
+            Next
+            Return closestPlanet
         End Function
 
         Public Sub Move(ByVal planets() As Celestial)
-            velocity.add(Grav(planets, position)) 'add to velocity
-            Dim referenceVector As PVector = velocity.getThis
-            If currentKeys.Contains(Keys.Up) Then
-                referenceVector.setMagnitude(thrusterForce)
-                velocity.add(referenceVector)
-            ElseIf currentKeys.Contains(Keys.Down) Then
-                referenceVector.setMagnitude(-thrusterForce)
-                velocity.add(referenceVector)
+            velocity.add(Grav(planets, position))
+            velocity.add(Thrusters(velocity.getThis))
+            Dim drag As PVector = New PVector(0, 0)
+            Dim closestPlanet As Celestial = findClosestPlanet(planets, position)
+            If position.distance(closestPlanet.position) < (closestPlanet.atmosphereRadii) Then
+                drag = velocity.getThis
+                drag.multiply(-1) 'drag is opposite to prograde
+                drag.setMagnitude(dragMagnitude(closestPlanet, position.getThis, velocity.getThis)) 'magnitude of force
+                If position.distance(closestPlanet.position) < closestPlanet.radii Then 'ship crashed
+                    blnCrashProcedure = True
+                End If
             End If
-            referenceVector = velocity.getThis
-            If currentKeys.Contains(Keys.Left) Then
-                referenceVector.setMagnitude(thrusterForce)
-                velocity.add(referenceVector.rotate(-Math.PI / 2))
-            ElseIf currentKeys.Contains(Keys.Right) Then
-                referenceVector.setMagnitude(thrusterForce)
-                velocity.add(referenceVector.rotate(Math.PI / 2))
-            End If
+            velocity.add(drag)
             position.add(velocity) 'move the spacecraft
         End Sub
 
+        Dim currentFlameSize As Single = 10
+        Dim flameVelocity As Single = 0.5
+        Dim maxFlameSize As Single = 20
+        Dim minFlameSize As Single = 10
+
+        Public Sub Draw(ByRef buffer As Graphics, ByVal planets() As Celestial)
+            futurePath(planets, buffer)
+            buffer.FillEllipse(Brushes.Beige, New Rectangle(position.x - 5, position.y - 5, 10, 10)) 'draw the space ship
+
+            Dim closestPlanet As Celestial = findClosestPlanet(planets, position)
+            If position.distance(closestPlanet.position) < closestPlanet.atmosphereRadii Then
+                'below calculates the opacity of the flame(ARGB), using 255*(1-(altitude/atmospheric height))
+                'absolute value used incase the player glitches into the ground
+                Dim sngOpacity As Single = 255 * (1 - (
+                                                (position.distance(closestPlanet.position) - closestPlanet.radii) /
+                                                (closestPlanet.atmosphereRadii - closestPlanet.radii)))
+                If sngOpacity > 255 Or sngOpacity < 0 Then 'incase the player glitches into the ground
+                    sngOpacity = 0
+                End If
+                Dim flameColor As Color = Color.FromArgb(sngOpacity, 255, 82, 13)
+
+                buffer.FillEllipse(New SolidBrush(flameColor),
+                                       New Rectangle(position.x - (currentFlameSize / 2), position.y - (currentFlameSize / 2),
+                                                                        currentFlameSize, currentFlameSize))
+                currentFlameSize += flameVelocity
+                If currentFlameSize >= maxFlameSize Then
+                    flameVelocity *= -1
+                ElseIf currentFlameSize <= minFlameSize Then
+                    flameVelocity *= -1
+                End If
+            End If
+
+        End Sub
+
+        'adds the thrust from user input
+        Private Function Thrusters(ByVal referenceVector As PVector) As PVector
+            Dim rtnVector As PVector = New PVector(0, 0)
+            Dim refVect As PVector = referenceVector.getThis
+            If currentKeys.Contains(Keys.Up) Then
+                referenceVector.setMagnitude(thrusterForce)
+                rtnVector.add(referenceVector)
+            ElseIf currentKeys.Contains(Keys.Down) Then
+                referenceVector.setMagnitude(-thrusterForce)
+                rtnVector.add(referenceVector)
+            End If
+            referenceVector = refVect.getThis 'to cancel the rotation above
+            If currentKeys.Contains(Keys.Left) Then
+                referenceVector.setMagnitude(thrusterForce)
+                rtnVector.add(referenceVector.rotate(-Math.PI / 2))
+            ElseIf currentKeys.Contains(Keys.Right) Then
+                referenceVector.setMagnitude(thrusterForce)
+                rtnVector.add(referenceVector.rotate(Math.PI / 2))
+            End If
+            Return rtnVector
+        End Function
+
+        'adds gravity from all the bodies
         Private Function Grav(ByVal planets() As Celestial, ByVal pos As PVector) As PVector
             Dim totalA As PVector = New PVector(0, 0) 'calculate spaceship kinematics
             For i = 0 To planets.Length - 1 'grav from all planets
@@ -227,94 +384,39 @@
             Return totalA
         End Function
 
-        Public Function unitVector(ByVal planets() As Celestial) As Point
-            Dim r As Double = position.distance(planets(0).position)
-            Dim a As PVector
-            a = position.subtract(planets(0).position) 'unit vector
-            a.divide(r) 'unit vector
-            a.multiply(100)
-            a.add(New PVector(200, 200))
-            Return New Point(a.x, a.y)
+        Private Function dragMagnitude(ByVal planet As Celestial, ByVal pos As PVector, ByVal vel As PVector) As Double
+            Dim scalingHeight As Double = planet.atmosphereRadii - planet.radii
+            Dim altitude As Double = pos.distance(planet.position) - planet.radii
+            Dim densityZero As Double = 1
+
+            Dim density As Double = Math.Pow(Math.E, altitude * -1 / scalingHeight) * densityZero
+
+            Return density * vel.mag ^ 2 * coefficenceDrag
         End Function
+
+        Dim shtCrashClock As Short = 0
+        Dim fadeSpeed As Single = 3
+        Public Sub explode(ByRef buffer As Graphics)
+            Dim flameColor As Color = Color.FromArgb(100, 255, 82, 13)
+            Dim shtFlameRadius As Short = shtCrashClock / 3
+            buffer.FillEllipse(New SolidBrush(flameColor),
+                               New Rectangle(position.x - (shtFlameRadius / 2), position.y - (shtFlameRadius / 2), shtFlameRadius, shtFlameRadius))
+            If shtCrashClock < 50 Then
+                Dim shockWaveColor As Color = Color.FromArgb(20, 255, 255, 255)
+                Dim shtShockRadius As Short = shtCrashClock * 50
+                buffer.FillEllipse(New SolidBrush(shockWaveColor),
+                                   New Rectangle(position.x - (shtShockRadius / 2), position.y - (shtShockRadius / 2), shtShockRadius, shtShockRadius))
+            ElseIf shtCrashClock < (255 / fadeSpeed) Then 'the limit for ARGB value is 255 so: 255 + 50 -20
+                Dim fadeColor As Color = Color.FromArgb(20 + (shtCrashClock * fadeSpeed) - 50, 255, 255, 255) 'to match the opacity of the shock wave
+                buffer.FillRectangle(New SolidBrush(fadeColor),
+                                   New Rectangle(position.x - (form.Width / 2), position.y - (form.Height / 2), form.Width, form.Height))
+            Else
+                RaiseEvent crashed()
+            End If
+            shtCrashClock += 1
+        End Sub
 
     End Class
 
 
-
-    '=========================vector calculations and storage==============='
-    Private Class PVector
-        Public x, y As Double
-
-        Public Sub New(ByVal x As Double, ByVal y As Double)
-            Me.x = x
-            Me.y = y
-        End Sub
-
-        Public Function getThis() As PVector
-            Return DirectCast(Me.MemberwiseClone, PVector)
-        End Function
-
-
-        Public Function mag() As Double
-            Return Math.Sqrt(x ^ 2 + y ^ 2)
-        End Function
-
-        Public Sub setMagnitude(ByVal magnitude As Double)
-            Me.divide(mag) 'what happens if divide by zero and why does not happen
-            Me.multiply(magnitude)
-        End Sub
-
-        Public Function distance(ByVal other As PVector) As Double
-            Dim dblX As Double = Math.Abs(other.x - x)
-            Dim dblY As Double = Math.Abs(other.y - y)
-            Return Math.Sqrt(dblX ^ 2 + dblY ^ 2)
-        End Function
-
-        Public Sub multiply(ByVal value As Double)
-            x *= value
-            y *= value
-        End Sub
-
-        Public Sub divide(ByVal value As Double)
-            x /= value
-            y /= value
-        End Sub
-
-        Public Sub add(ByVal value As PVector)
-            x += value.x
-            y += value.y
-        End Sub
-
-        Public Function subtract(ByVal other As PVector) As PVector
-            Dim sum As PVector = New PVector(0, 0)
-            sum.x = other.x - x
-            sum.y = other.y - y
-            Return sum
-        End Function
-
-        Public Function rotate(ByVal radians As Double) As PVector
-            Dim px, py As Double
-            px = x
-            py = y
-            Return New PVector(px * Math.Cos(radians) - py * Math.Sin(radians), px * Math.Sin(radians) + py * Math.Cos(radians))
-        End Function
-
-        Public Shared Function toPoint(ByVal vector As PVector) As Point
-            Return New Point(vector.x, vector.y)
-        End Function
-
-    End Class
-
-End Module
-
-
-Module KeyStates
-    Public up, down, left, right As Boolean
-
-    Public Sub reset()
-        up = False
-        down = False
-        left = False
-        right = False
-    End Sub
 End Module
