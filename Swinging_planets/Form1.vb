@@ -29,6 +29,19 @@ Public Class Form1
     End Sub
 
 
+    Private Sub Form1_MouseWheel(sender As Object, e As System.Windows.Forms.MouseEventArgs) Handles Me.MouseWheel
+        If GameScreen.thisScreen = screenState.running Then
+            GameScreen.mouseWheel(sender, e)
+        End If
+    End Sub
+
+    Public Sub loadAndDisplayDeathScreen(ByRef savedFrames As Persistence)
+        GameScreen.unload()
+        deathScreen.load(savedFrames)
+        deathScreen.run()
+    End Sub
+
+
 
 End Class
 
@@ -37,3 +50,26 @@ Enum screenState
     running
     unloaded
 End Enum
+
+Module KeyStates
+    Public up, down, left, right As Boolean
+
+    Public Sub reset()
+        up = False
+        down = False
+        left = False
+        right = False
+    End Sub
+End Module
+
+Module zoomState
+    Public zoom As Single = 1
+
+    Public Sub mouseWheelMove(delta As Integer)
+        Dim sngP As Single = zoom
+        zoom += delta / (1000 * (1 / zoom))
+        If zoom = 0 Then
+            zoom = sngP
+        End If
+    End Sub
+End Module

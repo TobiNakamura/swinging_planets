@@ -1,0 +1,39 @@
+C:\Users\Tobi\dev\swingingPlanets\vb\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.exe
+C:\Users\Tobi\dev\swingingPlanets\vb\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.pdb
+C:\Users\Tobi\dev\swingingPlanets\vb\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.xml
+C:\Users\Tobi\dev\swingingPlanets\vb\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Resources.resources
+C:\Users\Tobi\dev\swingingPlanets\vb\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.vbproj.GenerateResource.Cache
+C:\Users\Tobi\dev\swingingPlanets\vb\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.exe
+C:\Users\Tobi\dev\swingingPlanets\vb\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.xml
+C:\Users\Tobi\dev\swingingPlanets\vb\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.pdb
+J:\get git things\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.exe
+J:\get git things\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.xml
+J:\get git things\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.pdb
+M:\prog_11\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.exe
+M:\prog_11\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.xml
+M:\prog_11\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.pdb
+M:\prog_11\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Resources.resources
+M:\prog_11\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.vbproj.GenerateResource.Cache
+M:\prog_11\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.exe
+M:\prog_11\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.pdb
+M:\prog_11\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.xml
+E:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.exe
+E:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.xml
+E:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.pdb
+J:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.exe
+J:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.xml
+J:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.pdb
+J:\newest\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.exe
+J:\newest\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.pdb
+J:\newest\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.xml
+J:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Resources.resources
+J:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.vbproj.GenerateResource.Cache
+M:\prog_11\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Form1.resources
+C:\Users\Tobi\dev\swingingPlanets\vb\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Form1.resources
+E:\newest\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.exe
+E:\newest\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.pdb
+E:\newest\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.xml
+E:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Form1.resources
+E:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Resources.resources
+E:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.vbproj.GenerateResource.Cache
+J:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Form1.resources
