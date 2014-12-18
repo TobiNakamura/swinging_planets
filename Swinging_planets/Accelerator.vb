@@ -7,6 +7,4 @@
         Me.sngAcceleration = sngAcceleration
     End Sub
 
-ttttttttttttttt
-
 End Class
