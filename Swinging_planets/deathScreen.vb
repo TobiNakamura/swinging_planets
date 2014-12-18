@@ -27,15 +27,8 @@
     End Sub
 
     Public Sub run()
-<<<<<<< HEAD
         drawGallery(0)
         Form1.Update()
-=======
-
-        Form1.Update()
-        drawGallery(0)
-
->>>>>>> 716275186773b005fe165f3398a12f0e1b007e7d
         thisScreen = screenState.running
     End Sub
 

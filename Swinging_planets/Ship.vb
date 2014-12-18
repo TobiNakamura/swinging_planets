@@ -57,6 +57,7 @@ Public Class Ship
 
             v.add(drag)
             p.add(v) 'move the spacecraft
+            p.add(v)
             ReDim Preserve rtnPoints(lineIndex) 'extend the array to add new point
             rtnPoints(lineIndex) = New Point(p.x, p.y)
             lineIndex += 1

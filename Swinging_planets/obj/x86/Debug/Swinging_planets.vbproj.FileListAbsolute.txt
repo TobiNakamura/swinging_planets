@@ -29,7 +29,6 @@ J:\newest\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.xml
 J:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Resources.resources
 J:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.vbproj.GenerateResource.Cache
 M:\prog_11\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Form1.resources
-<<<<<<< HEAD
 C:\Users\Tobi\dev\swingingPlanets\vb\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Form1.resources
 E:\newest\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.exe
 E:\newest\Swinging_planets\Swinging_planets\bin\Debug\Swinging_planets.pdb
@@ -38,5 +37,3 @@ E:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Form1
 E:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Resources.resources
 E:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.vbproj.GenerateResource.Cache
 J:\newest\Swinging_planets\Swinging_planets\obj\x86\Debug\Swinging_planets.Form1.resources
-=======
->>>>>>> 716275186773b005fe165f3398a12f0e1b007e7d
